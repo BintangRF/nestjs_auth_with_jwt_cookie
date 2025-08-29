@@ -12,18 +12,12 @@ Pendekatan ini menghindari penyimpanan token di `localStorage` dan memanfaatkan 
    - Dipakai di setiap request untuk mengakses resource yang membutuhkan autentikasi.
    - Disimpan di Cookie (HTTP-Only).
 
-2. **Refresh Token (RT)**
-   - JWT berumur panjang (misal 7–30 hari).
-   - Hanya dipakai untuk **mendapatkan access token baru** saat AT kadaluarsa.
-   - Disimpan di Cookie berbeda (HTTP-Only + Secure).
-   - Bisa dikelola stateless (langsung JWT) atau stateful (disimpan di DB/Redis untuk bisa direvoke).
-
-3. **Middleware / Guard AUTH**
+2. **Middleware / Guard AUTH**
    - Membatasi akses hanya untuk user yang sudah login.
    - Mengecek keberadaan dan validitas access token di cookie.
 
-4. **Check-Auth Endpoint**
-   - Endpoint ringan (`GET /auth/check`) untuk memastikan session masih valid.
+3. **Check-Auth Endpoint**
+   - Endpoint ringan (`GET /auth/check-auth`) untuk memastikan session masih valid.
    - Dipanggil oleh FE saat aplikasi load/refresh agar tau status login user.
 
 ---
@@ -35,10 +29,9 @@ Pendekatan ini menghindari penyimpanan token di `localStorage` dan memanfaatkan 
 - User submit username + password.
 - Server:
   - Verifikasi credential.
-  - Generate `accessToken` (15 menit) + `refreshToken` (7 hari).
+  - Generate `accessToken` (15 menit).
   - Kirim ke client sebagai **HTTP-Only Cookie**:
     - `access_token`
-    - `refresh_token`
 
 ### 2. Access Resource
 
@@ -68,15 +61,13 @@ npm install @nestjs/jwt passport-jwt cookie-parser
 
 - **Keamanan lebih baik**: Token tidak bisa diakses lewat JS (`httpOnly`).
 - **FE lebih sederhana**: Tidak perlu simpan token di `localStorage`.
-- **Session terkontrol di server**: Bisa revoke refresh token kapan saja.
-- **Scalable**: Refresh token hanya dipakai saat AT expired → tidak menambah load signifikan.
 
 ---
 
 ## ⚠️ Catatan Penting
 
 - Gunakan `Secure` flag di cookie **(hanya bisa diakses lewat HTTPS)** untuk production.
-- Jangan buat access token terlalu panjang.
+- Jangan buat access token terlalu lama.
 
 ---
 
@@ -85,7 +76,7 @@ npm install @nestjs/jwt passport-jwt cookie-parser
 1. **Middleware/Guard AUTH** → membatasi akses API.
 2. **Access token di cookie** → validasi cepat setiap request.
 3. **Check-auth endpoint** → memastikan user masih login.
-4. **Logout** → cukup clear cookie + revoke RT (jika pakai DB/Redis).
+4. **Logout** → cukup clear cookie.
 
 ```
 
